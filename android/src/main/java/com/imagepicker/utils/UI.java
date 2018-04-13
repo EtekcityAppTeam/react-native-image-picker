@@ -1,5 +1,6 @@
 package com.imagepicker.utils;
 
+import android.view.View;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.drawable.ColorDrawable;
@@ -11,6 +12,10 @@ import android.widget.ArrayAdapter;
 import com.facebook.react.bridge.ReadableMap;
 import com.imagepicker.ImagePickerModule;
 import com.imagepicker.R;
+
+import android.view.Gravity;
+import android.view.Window;
+import android.view.WindowManager;
 
 import java.lang.ref.WeakReference;
 import java.util.List;
@@ -31,18 +36,15 @@ public class UI
         }
         final WeakReference<ImagePickerModule> reference = new WeakReference<>(module);
 
-        final ButtonsHelper buttons = ButtonsHelper.newInstance(options);
-        final List<String> titles = buttons.getTitles();
-        final List<String> actions = buttons.getActions();
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(
-                context,
-                R.layout.list_item,
-                titles
-        );
-        AlertDialog.Builder builder = new AlertDialog.Builder(context,R.style.DefaultExplainingPermissionsTheme /*android.R.style.Theme_Holo_Light_Dialog*/);
-        View view = View.inflate(context,R.layout.view_take_image,null);
-        builder.setView(view);
-
+//        final ButtonsHelper buttons = ButtonsHelper.newInstance(options);
+//        final List<String> titles = buttons.getTitles();
+//        final List<String> actions = buttons.getActions();
+//        ArrayAdapter<String> adapter = new ArrayAdapter<>(
+//                context,
+//                R.layout.list_item,
+//                titles
+//        );
+//        AlertDialog.Builder builder = new AlertDialog.Builder(context, module.getDialogThemeId() /*android.R.style.Theme_Holo_Light_Dialog*/);
 //        if (ReadableMapUtils.hasAndNotEmptyString(options, "title"))
 //        {
 //            builder.setTitle(options.getString("title"));
@@ -81,9 +83,25 @@ public class UI
 //                dialogInterface.dismiss();
 //            }
 //        });
+//
+//        final AlertDialog dialog = builder.create();
+//
+//        dialog.setOnCancelListener(new DialogInterface.OnCancelListener()
+//        {
+//            @Override
+//            public void onCancel(@NonNull final DialogInterface dialog)
+//            {
+//                callback.onCancel(reference.get());
+//                dialog.dismiss();
+//            }
+//        });
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(context,module.getDialogThemeId());
+        View view = View.inflate(context,R.layout.view_take_image,null);
+        builder.setView(view);
+
 
         final AlertDialog dialog = builder.create();
-
         dialog.setOnCancelListener(new DialogInterface.OnCancelListener()
         {
             @Override
@@ -118,13 +136,13 @@ public class UI
                 dialog.dismiss();
             }
         });
-        view.findViewById(R.id.take_image_cancel).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                callback.onCancel(reference.get());
-                dialog.dismiss();
-            }
-        });
+
+//        view.findViewById(R.id.take_image_default_photo).setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                //TODO
+//            }
+//        });
         Window window = dialog.getWindow();
         window.setGravity(Gravity.BOTTOM);
         window.getDecorView().setPadding(0, 0, 0, 0);
@@ -133,6 +151,9 @@ public class UI
         lp.width = WindowManager.LayoutParams.MATCH_PARENT;
         lp.height = WindowManager.LayoutParams.WRAP_CONTENT;
         window.setAttributes(lp);
+
+
+
         return dialog;
     }
 
