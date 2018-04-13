@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="from_album">Aus dem Album</string>
+    <string name="take_photo">Mach ein Foto</string>
+    <string name="default_photo">Default Photo</string>
+    <string name="pick_image_cancel">Abbrechen</string>
+</resources>

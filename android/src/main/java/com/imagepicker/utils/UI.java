@@ -39,45 +39,48 @@ public class UI
                 R.layout.list_item,
                 titles
         );
-        AlertDialog.Builder builder = new AlertDialog.Builder(context, module.getDialogThemeId() /*android.R.style.Theme_Holo_Light_Dialog*/);
-        if (ReadableMapUtils.hasAndNotEmptyString(options, "title"))
-        {
-            builder.setTitle(options.getString("title"));
-        }
+        AlertDialog.Builder builder = new AlertDialog.Builder(context,R.style.DefaultExplainingPermissionsTheme /*android.R.style.Theme_Holo_Light_Dialog*/);
+        View view = View.inflate(context,R.layout.view_take_image,null);
+        builder.setView(view);
 
-        builder.setAdapter(adapter, new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int index) {
-                final String action = actions.get(index);
-
-                switch (action) {
-                    case "photo":
-                        callback.onTakePhoto(reference.get());
-                        break;
-
-                    case "library":
-                        callback.onUseLibrary(reference.get());
-                        break;
-
-                    case "cancel":
-                        callback.onCancel(reference.get());
-                        break;
-
-                    default:
-                        callback.onCustomButton(reference.get(), action);
-                }
-            }
-        });
-
-        builder.setNegativeButton(buttons.btnCancel.title, new DialogInterface.OnClickListener()
-        {
-            @Override
-            public void onClick(DialogInterface dialogInterface,
-                                int i)
-            {
-                callback.onCancel(reference.get());
-                dialogInterface.dismiss();
-            }
-        });
+//        if (ReadableMapUtils.hasAndNotEmptyString(options, "title"))
+//        {
+//            builder.setTitle(options.getString("title"));
+//        }
+//
+//        builder.setAdapter(adapter, new DialogInterface.OnClickListener() {
+//            public void onClick(DialogInterface dialog, int index) {
+//                final String action = actions.get(index);
+//
+//                switch (action) {
+//                    case "photo":
+//                        callback.onTakePhoto(reference.get());
+//                        break;
+//
+//                    case "library":
+//                        callback.onUseLibrary(reference.get());
+//                        break;
+//
+//                    case "cancel":
+//                        callback.onCancel(reference.get());
+//                        break;
+//
+//                    default:
+//                        callback.onCustomButton(reference.get(), action);
+//                }
+//            }
+//        });
+//
+//        builder.setNegativeButton(buttons.btnCancel.title, new DialogInterface.OnClickListener()
+//        {
+//            @Override
+//            public void onClick(DialogInterface dialogInterface,
+//                                int i)
+//            {
+//                callback.onCancel(reference.get());
+//                dialogInterface.dismiss();
+//            }
+//        });
 
         final AlertDialog dialog = builder.create();
 
@@ -91,7 +94,45 @@ public class UI
             }
         });
 
-        //dialog.getWindow().setBackgroundDrawable(new ColorDrawable(android.graphics.Color.TRANSPARENT));
+        dialog.setOnCancelListener(new DialogInterface.OnCancelListener()
+        {
+            @Override
+            public void onCancel(@NonNull final DialogInterface dialog)
+            {
+                callback.onCancel(reference.get());
+                dialog.dismiss();
+            }
+        });
+        //自定义布局 begin
+        view.findViewById(R.id.take_image_open_album).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                callback.onUseLibrary(reference.get());
+                dialog.dismiss();
+            }
+        });
+        view.findViewById(R.id.take_image_open_camera).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                callback.onTakePhoto(reference.get());
+                dialog.dismiss();
+            }
+        });
+        view.findViewById(R.id.take_image_cancel).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                callback.onCancel(reference.get());
+                dialog.dismiss();
+            }
+        });
+        Window window = dialog.getWindow();
+        window.setGravity(Gravity.BOTTOM);
+        window.getDecorView().setPadding(0, 0, 0, 0);
+        window.setWindowAnimations(R.style.dialog_animation);
+        WindowManager.LayoutParams lp = window.getAttributes();
+        lp.width = WindowManager.LayoutParams.MATCH_PARENT;
+        lp.height = WindowManager.LayoutParams.WRAP_CONTENT;
+        window.setAttributes(lp);
         return dialog;
     }
 
