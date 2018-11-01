@@ -1,15 +1,16 @@
 package com.imagepicker.utils;
 
+import android.view.LayoutInflater;
 import android.view.View;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.graphics.drawable.ColorDrawable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AlertDialog;
-import android.widget.ArrayAdapter;
 
+import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
+import com.facebook.react.bridge.ReadableNativeMap;
 import com.imagepicker.ImagePickerModule;
 import com.imagepicker.R;
 
@@ -18,7 +19,6 @@ import android.view.Window;
 import android.view.WindowManager;
 
 import java.lang.ref.WeakReference;
-import java.util.List;
 
 /**
  * @author Alexander Ustinov
@@ -97,10 +97,9 @@ public class UI
 //        });
 
         AlertDialog.Builder builder = new AlertDialog.Builder(context,module.getDialogThemeId());
-        View view = View.inflate(context,R.layout.view_take_image,null);
+        LayoutInflater layoutInflater = LayoutInflater.from(context);
+        View view = layoutInflater.inflate(R.layout.view_take_image_picker,null);
         builder.setView(view);
-
-
         final AlertDialog dialog = builder.create();
         dialog.setOnCancelListener(new DialogInterface.OnCancelListener()
         {
@@ -136,24 +135,38 @@ public class UI
                 dialog.dismiss();
             }
         });
+        view.findViewById(R.id.take_image_cancel).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                callback.onCancel(reference.get());
+                dialog.dismiss();
+            }
+        });
+        view.findViewById(R.id.take_image_default_photo).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                callback.onCustomButton(reference.get());
+                dialog.dismiss();
+            }
+        });
 
-//        view.findViewById(R.id.take_image_default_photo).setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                //TODO
-//            }
-//        });
+        ReadableNativeMap map = (ReadableNativeMap)options;
+        if (map.hasKey("customButtons")){
+            ReadableArray array = map.getArray("customButtons");
+            if (array != null && array.size() > 0){
+                view.findViewById(R.id.take_image_default_photo).setVisibility(View.VISIBLE);
+            }else {
+                view.findViewById(R.id.take_image_default_photo).setVisibility(View.GONE);
+            }
+        }
         Window window = dialog.getWindow();
-        window.setGravity(Gravity.BOTTOM);
         window.getDecorView().setPadding(0, 0, 0, 0);
         window.setWindowAnimations(R.style.dialog_animation);
         WindowManager.LayoutParams lp = window.getAttributes();
         lp.width = WindowManager.LayoutParams.MATCH_PARENT;
         lp.height = WindowManager.LayoutParams.WRAP_CONTENT;
+        lp.gravity = Gravity.BOTTOM;
         window.setAttributes(lp);
-
-
-
         return dialog;
     }
 
@@ -162,6 +175,6 @@ public class UI
         void onTakePhoto(@Nullable ImagePickerModule module);
         void onUseLibrary(@Nullable ImagePickerModule module);
         void onCancel(@Nullable ImagePickerModule module);
-        void onCustomButton(@Nullable ImagePickerModule module, String action);
+        void onCustomButton(@Nullable ImagePickerModule module);
     }
 }

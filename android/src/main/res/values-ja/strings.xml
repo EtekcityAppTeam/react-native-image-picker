@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="from_album">アルバムから</string>
     <string name="take_photo">写真を撮る</string>
-    <string name="default_photo">Default Photo</string>
+    <string name="choose_photo">写真を選択</string>
+    <string name="default_photo">デフォルトの写真</string>
     <string name="pick_image_cancel">キャンセル</string>
 </resources>

@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.v7.widget.LinearLayoutCompat xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/transparent"
+    android:orientation="vertical"
+    app:divider="@drawable/divider_line"
+    app:showDividers="beginning|middle">
+
+    <Button
+        android:id="@+id/take_image_open_camera"
+        style="@style/RemoveButtonShadow"
+        android:layout_width="match_parent"
+        android:layout_height="55dp"
+        android:background="@drawable/bg_ripple_white"
+        android:gravity="center"
+        android:text="@string/take_photo"
+        android:textAllCaps="false"
+        android:textColor="@color/pick_image_button_text_color"
+        android:textSize="16sp" />
+
+    <Button
+        android:id="@+id/take_image_open_album"
+        style="@style/RemoveButtonShadow"
+        android:layout_width="match_parent"
+        android:layout_height="55dp"
+        android:background="@drawable/bg_ripple_white"
+        android:gravity="center"
+        android:text="@string/choose_photo"
+        android:textAllCaps="false"
+        android:textColor="@color/pick_image_button_text_color"
+        android:textSize="16sp" />
+
+    <Button
+        android:id="@+id/take_image_default_photo"
+        style="@style/RemoveButtonShadow"
+        android:layout_width="match_parent"
+        android:layout_height="55dp"
+        android:background="@drawable/bg_ripple_white"
+        android:gravity="center"
+        android:text="@string/default_photo"
+        android:textAllCaps="false"
+        android:textColor="@color/pick_image_button_text_color"
+        android:textSize="16sp"
+        android:visibility="gone"/>
+
+    <Button
+        android:id="@+id/take_image_cancel"
+        android:layout_width="match_parent"
+        android:layout_height="55dp"
+        android:layout_marginTop="10dp"
+        android:background="@drawable/bg_ripple_white_borderline"
+        android:gravity="center"
+        android:text="@string/pick_image_cancel"
+        android:textAllCaps="false"
+        android:textColor="@color/pick_image_button_text_color"
+        android:textSize="16sp" />
+</android.support.v7.widget.LinearLayoutCompat>

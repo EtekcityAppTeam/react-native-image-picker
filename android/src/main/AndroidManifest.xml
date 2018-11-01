@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.imagepicker"
-    >
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  package="com.imagepicker"
+  >
     <application>
-        <provider
-            android:name=".AppFileProvider"
+      <provider
+            android:name="com.imagepicker.FileProvider"
             android:authorities="${applicationId}.provider"
             android:exported="false"
             android:grantUriPermissions="true">

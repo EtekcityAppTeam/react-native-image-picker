@@ -48,11 +48,10 @@ public class ResponseHelper
         response.putDouble(key, value);
     }
 
-    public void invokeCustomButton(@NonNull final Callback callback,
-                                   @NonNull final String action)
+    public void invokeCustomButton(@NonNull final Callback callback)
     {
         cleanResponse();
-        response.putString("customButton", action);
+        response.putBoolean("customButton", true);
         invokeResponse(callback);
     }
 

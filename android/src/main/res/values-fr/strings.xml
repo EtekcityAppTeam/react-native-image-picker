@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="take_photo">Prendre une Photo</string>
+    <string name="choose_photo">Choisir une Photo</string>
+    <string name="default_photo">Photo par Défaut</string>
+    <string name="pick_image_cancel">Annuler</string>
+</resources>
