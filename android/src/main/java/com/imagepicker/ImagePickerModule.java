@@ -413,8 +413,8 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
         }
         //add 20170831
         if (REQUEST_LAUNCH_IMAGE_CAPTURE == requestCode || REQUEST_LAUNCH_IMAGE_LIBRARY == requestCode) {
-            File file = new File(responseHelper.getResponse().getString("path"));
-            cropPicture(activity, RealPathUtil.compatUriFromFile(reactContext, file));
+//            File file = new File(responseHelper.getResponse().getString("path"));
+            cropPicture(activity, uri);
             return;
         }
         //end 20170831
