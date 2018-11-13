@@ -100,12 +100,13 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
                 if (requestCode == REQUEST_PERMISSIONS_FOR_LIBRARY){
                     boolean isTip = ActivityCompat.shouldShowRequestPermissionRationale(getActivity(), Manifest.permission.WRITE_EXTERNAL_STORAGE);
                     if (!isTip){
-                        showDialogIos("Please continue to access VeSync album in your phone Settings.Without album access, VeSync cannot obtain your images");
+                        showDialogIos(getActivity().getString(R.string.permission_tip_photo));
                     }
                 }else if (requestCode == REQUEST_PERMISSIONS_FOR_CAMERA){
-                    boolean isTip = ActivityCompat.shouldShowRequestPermissionRationale(getActivity(), Manifest.permission.WRITE_EXTERNAL_STORAGE) && ActivityCompat.shouldShowRequestPermissionRationale(getActivity(), Manifest.permission.CAMERA);
-                    if (!isTip){
-                        showDialogIos("Please continue to access VeSync in your phone Settings to take a photo.VeSync can't get your camera without photo access");
+                    boolean isTipCamera = ActivityCompat.shouldShowRequestPermissionRationale(getActivity(), Manifest.permission.CAMERA);
+                    boolean isTipSD = ActivityCompat.shouldShowRequestPermissionRationale(getActivity(), Manifest.permission.WRITE_EXTERNAL_STORAGE);
+                    if ((isTipCamera == false) && (isTipSD == false)){
+                        showDialogIos(getActivity().getString(R.string.permission_tip_camera));
                     }
                 }
                 responseHelper.invokeError(callback, "Permissions weren't granted");
