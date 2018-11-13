@@ -4,4 +4,8 @@
     <string name="choose_photo">Choisir une Photo</string>
     <string name="default_photo">Photo par Défaut</string>
     <string name="pick_image_cancel">Annuler</string>
+
+    <!--权限提示-->
+    <string name="permission_tip_camera">Autorisez-vous VeSync à accéder à votre caméra pour prendre des photos?</string>
+    <string name="permission_tip_photo">Autorisez-vous VeSync à accéder à vos photos pour les télécharger?</string>
 </resources>
