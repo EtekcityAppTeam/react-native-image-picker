@@ -4,4 +4,8 @@
     <string name="choose_photo">写真を選択</string>
     <string name="default_photo">デフォルトの写真</string>
     <string name="pick_image_cancel">キャンセル</string>
+
+    <!--权限提示-->
+    <string name="permission_tip_camera">Vesync にカメラへのアクセスを許可して、写真を撮影できるようにしますか?</string>
+    <string name="permission_tip_photo">Vesync に写真へのアクセスを許可して、写真をアップロードできるようにしますか?</string>
 </resources>

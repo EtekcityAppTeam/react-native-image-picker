@@ -5,4 +5,8 @@
     <string name="default_photo">Default Photo</string>
     <string name="pick_image_cancel">Cancel</string>
     <string name="pick_image_ok">Ok</string>
+
+    <!--权限提示-->
+    <string name="permission_tip_camera">Allow VeSync to access your camera so you can take photos?</string>
+    <string name="permission_tip_photo">Allow VeSync to access your photos so you can upload them?</string>
 </resources>
