@@ -7,28 +7,15 @@ def computeVersionName() {
     return json.version
 }
 
-buildscript {
-    repositories {
-        google()
-        jcenter()
-    }
-
-    dependencies {
-//        classpath 'com.android.tools.build:gradle:2.2.+'
-        classpath 'com.android.tools.build:gradle:3.1.4'
-
-    }
-}
-
 apply plugin: 'com.android.library'
 
 android {
-    compileSdkVersion 25
-    buildToolsVersion '27.0.3'
+    compileSdkVersion 27
+    buildToolsVersion '28.0.3'
 
     defaultConfig {
         minSdkVersion 16
-        targetSdkVersion 25
+        targetSdkVersion 27
         versionCode 1
         versionName computeVersionName()
     }
@@ -48,17 +35,6 @@ android {
         releaseStaging {
 
         }
-    }
-}
-
-repositories {
-    google()
-    mavenCentral()
-    maven {
-        url "$projectDir/../Example/node_modules/react-native/android"
-    }
-    maven {
-        url "$projectDir/../../react-native/android"
     }
 }
 
