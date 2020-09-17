@@ -5,8 +5,8 @@ import android.app.Activity;
 import android.app.Dialog;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
@@ -14,21 +14,18 @@ import android.os.Build;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.provider.Settings;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.annotation.StyleRes;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AlertDialog;
 import android.text.TextUtils;
 import android.util.Base64;
-import android.util.Log;
 import android.util.Patterns;
 import android.view.View;
 import android.webkit.MimeTypeMap;
-import android.content.pm.PackageManager;
 import android.widget.TextView;
-
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.StyleRes;
+import androidx.appcompat.app.AlertDialog;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import com.facebook.react.ReactActivity;
 import com.facebook.react.bridge.ActivityEventListener;
 import com.facebook.react.bridge.Callback;
@@ -36,13 +33,12 @@ import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.ReadableMap;
+import com.facebook.react.modules.core.PermissionListener;
 import com.imagepicker.media.ImageConfig;
-import com.imagepicker.permissions.PermissionUtils;
 import com.imagepicker.permissions.OnImagePickerPermissionsCallback;
 import com.imagepicker.utils.MediaUtils.ReadExifResult;
 import com.imagepicker.utils.RealPathUtil;
 import com.imagepicker.utils.UI;
-
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -51,14 +47,15 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.lang.ref.WeakReference;
 import java.util.List;
 
-import com.facebook.react.modules.core.PermissionListener;
-
-import static com.imagepicker.utils.MediaUtils.*;
+import static com.imagepicker.utils.MediaUtils.RolloutPhotoResult;
 import static com.imagepicker.utils.MediaUtils.createNewFile;
+import static com.imagepicker.utils.MediaUtils.fileScan;
 import static com.imagepicker.utils.MediaUtils.getResizedImage;
+import static com.imagepicker.utils.MediaUtils.readExifInterface;
+import static com.imagepicker.utils.MediaUtils.removeUselessFiles;
+import static com.imagepicker.utils.MediaUtils.rolloutPhotoFromCamera;
 
 public class ImagePickerModule extends ReactContextBaseJavaModule
         implements ActivityEventListener {
@@ -105,7 +102,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
                 }else if (requestCode == REQUEST_PERMISSIONS_FOR_CAMERA){
                     boolean isTipCamera = ActivityCompat.shouldShowRequestPermissionRationale(getActivity(), Manifest.permission.CAMERA);
                     boolean isTipSD = ActivityCompat.shouldShowRequestPermissionRationale(getActivity(), Manifest.permission.WRITE_EXTERNAL_STORAGE);
-                    if ((isTipCamera == false) && (isTipSD == false)){
+                    if ((!isTipCamera) && (!isTipSD)){
                         showDialogIos(getActivity().getString(R.string.permission_tip_camera));
                     }
                 }
@@ -150,33 +147,21 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
         final AlertDialog dialog = UI.chooseDialog(this, options, new UI.OnAction() {
             @Override
             public void onTakePhoto(@NonNull final ImagePickerModule module) {
-                if (module == null) {
-                    return;
-                }
                 module.launchCamera();
             }
 
             @Override
             public void onUseLibrary(@NonNull final ImagePickerModule module) {
-                if (module == null) {
-                    return;
-                }
                 module.launchImageLibrary();
             }
 
             @Override
             public void onCancel(@NonNull final ImagePickerModule module) {
-                if (module == null) {
-                    return;
-                }
                 module.doOnCancel();
             }
 
             @Override
             public void onCustomButton(@NonNull final ImagePickerModule module) {
-                if (module == null) {
-                    return;
-                }
                 module.invokeCustomButton();
             }
         });
@@ -482,50 +467,6 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
             permissionsGrated = writePermission == PackageManager.PERMISSION_GRANTED && readPermission == PackageManager.PERMISSION_GRANTED && cameraPermission == PackageManager.PERMISSION_GRANTED;
         }
         if (!permissionsGrated) {
-//            boolean dontAskAgain = false;
-//            String msg = "";
-//            if (requestCode == REQUEST_PERMISSIONS_FOR_LIBRARY){
-//                msg = "Please continue to access VeSync album in your phone Settings.Without album access, VeSync cannot obtain your images";
-//                dontAskAgain = ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE);
-//            }else if (requestCode == REQUEST_PERMISSIONS_FOR_CAMERA){
-//                msg = "Please continue to access VeSync in your phone Settings to take a photo.VeSync can't get your camera without photo access";
-//                dontAskAgain = ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE) && ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.CAMERA);
-//            }
-//            if (dontAskAgain) {
-//                final Dialog dialog = new Dialog(getActivity(), R.style.customDialog);
-//                dialog.setContentView(R.layout.ios_dialog);
-//                dialog.setCanceledOnTouchOutside(true);
-//                TextView tvCancel = (TextView) dialog.findViewById(R.id.cancel);
-//                TextView tvOk = (TextView) dialog.findViewById(R.id.ok);
-//                TextView ios_dialog_title = (TextView) dialog.findViewById(R.id.ios_dialog_title);
-//                tvCancel.setText(getActivity().getResources().getString(R.string.pick_image_cancel));
-//                tvOk.setText(getActivity().getResources().getString(R.string.pick_image_ok));
-//                tvCancel.setTextColor(ContextCompat.getColor(getActivity(), R.color.colorAccent));
-//                tvOk.setTextColor(ContextCompat.getColor(getActivity(), R.color.colorAccent));
-//                ios_dialog_title.setText(msg);
-//                tvOk.setOnClickListener(new View.OnClickListener() {
-//                    @Override
-//                    public void onClick(View view) {
-//                        Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-//                        Uri uri = Uri.fromParts("package", getActivity().getPackageName(), null);
-//                        intent.setData(uri);
-//                        final Activity innerActivity = getActivity();
-//                        if (innerActivity == null) {
-//                            return;
-//                        }
-//                        innerActivity.startActivityForResult(intent, 1);
-//                        dialog.dismiss();
-//                    }
-//                });
-//                tvCancel.setOnClickListener(new View.OnClickListener() {
-//                    @Override
-//                    public void onClick(View view) {
-//                        dialog.dismiss();
-//                    }
-//                });
-//                dialog.show();
-//                return false;
-//            } else {
                 String[] PERMISSIONS_CAMERA = {Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.CAMERA};
                 String[] PERMISSIONS_LIBRARY = {Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE};
                 if (activity instanceof ReactActivity) {

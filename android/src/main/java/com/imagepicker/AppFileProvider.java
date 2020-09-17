@@ -1,6 +1,6 @@
 package com.imagepicker;
 
-import android.support.v4.content.FileProvider;
+import androidx.core.content.FileProvider;
 
 /**
  * Created by Nick on 2017/8/28.
