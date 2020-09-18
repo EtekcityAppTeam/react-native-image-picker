@@ -50,4 +50,6 @@ dependencies {
     testImplementation "org.powermock:powermock-module-junit4-rule:${POWERMOCK_VERSION}"
     testImplementation "org.powermock:powermock-classloading-xstream:${POWERMOCK_VERSION}"
     testImplementation "org.mockito:mockito-core:${MOCKITO_CORE_VERSION}"
+
+    implementation "androidx.exifinterface:exifinterface:1.3.0"
 }
