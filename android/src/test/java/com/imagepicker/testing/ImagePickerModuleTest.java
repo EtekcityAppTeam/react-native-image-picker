@@ -1,14 +1,18 @@
 package com.imagepicker.testing;
 
 import android.app.Activity;
+import android.content.pm.PackageManager;
 import android.net.Uri;
+
 import com.facebook.react.bridge.Arguments;
+import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.JavaOnlyArray;
 import com.facebook.react.bridge.JavaOnlyMap;
 import com.facebook.react.bridge.ReactApplicationContext;
+import com.facebook.react.common.build.ReactBuildConfig;
 import com.imagepicker.ImagePickerModule;
 import com.imagepicker.R;
-import java.io.File;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -26,6 +30,8 @@ import org.robolectric.RobolectricTestRunner;
 import org.robolectric.android.controller.ActivityController;
 import org.robolectric.annotation.Config;
 
+import java.io.File;
+
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertTrue;
@@ -41,8 +47,8 @@ import static org.powermock.api.mockito.PowerMockito.when;
 @PrepareForTest({Arguments.class})
 @PowerMockIgnore({"org.mockito.*", "org.robolectric.*", "android.*"})
 @Config(manifest = Config.NONE)
-public class ImagePickerModuleTest {
-
+public class ImagePickerModuleTest
+{
     private static final int DEFAULT_THEME = R.style.DefaultExplainingPermissionsTheme;
 
     @Rule
@@ -55,7 +61,8 @@ public class ImagePickerModuleTest {
     private TestableImagePickerModule module;
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() throws Exception
+    {
         nativeMock();
 
         activityController = Robolectric.buildActivity(Activity.class);
@@ -68,25 +75,28 @@ public class ImagePickerModuleTest {
     }
 
 
+
     @After
-    public void tearDown() {
+    public void tearDown()
+    {
         activityController.pause().stop().destroy();
         activity = null;
     }
 
 
     @Test
-    public void testCancelTakingPhoto() {
+    public void testCancelTakingPhoto()
+    {
         final SampleCallback callback = new SampleCallback();
         module.setCallback(callback);
         module.setCameraCaptureUri(Uri.fromFile(new File("")));
-        module.onActivityResult(activity, ImagePickerModule.REQUEST_LAUNCH_IMAGE_CAPTURE,
-                Activity.RESULT_CANCELED, null);
+        module.onActivityResult(activity, ImagePickerModule.REQUEST_LAUNCH_IMAGE_CAPTURE, Activity.RESULT_CANCELED, null);
         assertFalse("Camera's been launched", callback.hasError());
         assertTrue("User's cancelled of taking a photo", callback.didCancel());
     }
 
-    private void nativeMock() {
+    private void nativeMock()
+    {
         PowerMockito.mockStatic(Arguments.class);
         when(Arguments.createArray()).thenAnswer(new Answer<Object>() {
             @Override

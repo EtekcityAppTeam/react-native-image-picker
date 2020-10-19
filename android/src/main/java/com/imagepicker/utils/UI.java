@@ -36,6 +36,7 @@ public class UI {
             return null;
         }
         final WeakReference<ImagePickerModule> reference = new WeakReference<>(module);
+
         AlertDialog.Builder builder = new AlertDialog.Builder(context, module.getDialogThemeId());
         LayoutInflater layoutInflater = LayoutInflater.from(context);
         View view = layoutInflater.inflate(R.layout.view_take_image_picker, null);

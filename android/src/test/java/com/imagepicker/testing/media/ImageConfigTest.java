@@ -3,10 +3,12 @@ package com.imagepicker.testing.media;
 import com.facebook.react.bridge.JavaOnlyMap;
 import com.facebook.react.bridge.WritableMap;
 import com.imagepicker.media.ImageConfig;
-import java.io.File;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
+
+import java.io.File;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotNull;
@@ -18,12 +20,12 @@ import static junit.framework.Assert.assertTrue;
  */
 
 @RunWith(RobolectricTestRunner.class)
-public class ImageConfigTest {
-
+public class ImageConfigTest
+{
     @Test
-    public void testOnImmutable() {
-        ImageConfig original = new ImageConfig(new File("original.txt"), new File("resized.txt"), 0,
-                0, 0, 0, false);
+    public void testOnImmutable()
+    {
+        ImageConfig original = new ImageConfig(new File("original.txt"), new File("resized.txt"), 0, 0, 0, 0, false);
         ImageConfig updated = original.withOriginalFile(null);
 
         assertNotNull("Original has got original file", original.original);
@@ -61,7 +63,8 @@ public class ImageConfigTest {
     }
 
     @Test
-    public void testParsingOptions() {
+    public void testParsingOptions()
+    {
         WritableMap options = defaultOptions();
         ImageConfig config = new ImageConfig(null, null, 0, 0, 0, 0, false);
         config = config.updateFromOptions(options);
@@ -73,35 +76,31 @@ public class ImageConfigTest {
     }
 
     @Test
-    public void testUseOriginal() {
+    public void testUseOriginal()
+    {
         ImageConfig config = new ImageConfig(null, null, 800, 600, 100, 90, false);
 
         assertEquals("Image wont be resized", true, config.useOriginal(100, 100, 90));
-        assertEquals("Image will be resized because of rotation", false,
-                config.useOriginal(100, 100, 80));
-        assertEquals("Image will be resized because of initial width", false,
-                config.useOriginal(1000, 100, 80));
-        assertEquals("Image will be resized because of initial height", false,
-                config.useOriginal(100, 1000, 80));
+        assertEquals("Image will be resized because of rotation", false, config.useOriginal(100, 100, 80));
+        assertEquals("Image will be resized because of initial width", false, config.useOriginal(1000, 100, 80));
+        assertEquals("Image will be resized because of initial height", false, config.useOriginal(100, 1000, 80));
 
         ImageConfig qualityIsLow = config.withQuality(90);
-        assertEquals("Image will be resized because of quality is low", false,
-                qualityIsLow.useOriginal(100, 100, 90));
+        assertEquals("Image will be resized because of quality is low", false, qualityIsLow.useOriginal(100, 100, 90));
     }
 
     @Test
-    public void testGetActualFile() {
-        ImageConfig originalConfig = new ImageConfig(new File("original.txt"), null, 0, 0, 0, 0,
-                false);
+    public void testGetActualFile()
+    {
+        ImageConfig originalConfig = new ImageConfig(new File("original.txt"), null, 0, 0, 0, 0, false);
         ImageConfig resizedConfig = originalConfig.withResizedFile(new File("resized.txt"));
 
-        assertEquals("For config which has got only original file", "original.txt",
-                originalConfig.getActualFile().getName());
-        assertEquals("For config which has got resized file too", "resized.txt",
-                resizedConfig.getActualFile().getName());
+        assertEquals("For config which has got only original file", "original.txt", originalConfig.getActualFile().getName());
+        assertEquals("For config which has got resized file too", "resized.txt", resizedConfig.getActualFile().getName());
     }
 
-    private JavaOnlyMap defaultOptions() {
+    private JavaOnlyMap defaultOptions()
+    {
         JavaOnlyMap options = new JavaOnlyMap();
         options.putInt("maxWidth", 1000);
         options.putInt("maxHeight", 600);
