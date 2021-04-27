@@ -1,9 +1,11 @@
 package com.imagepicker;
 
 import android.Manifest;
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.ActivityNotFoundException;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -12,10 +14,12 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
+import android.os.FileUtils;
 import android.provider.MediaStore;
 import android.provider.Settings;
 import android.text.TextUtils;
 import android.util.Base64;
+import android.util.Log;
 import android.util.Patterns;
 import android.view.View;
 import android.webkit.MimeTypeMap;
@@ -26,6 +30,8 @@ import androidx.annotation.StyleRes;
 import androidx.appcompat.app.AlertDialog;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.content.FileProvider;
+
 import com.facebook.react.ReactActivity;
 import com.facebook.react.bridge.ActivityEventListener;
 import com.facebook.react.bridge.Callback;
@@ -47,6 +53,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 
 import static com.imagepicker.utils.MediaUtils.RolloutPhotoResult;
@@ -59,6 +67,9 @@ import static com.imagepicker.utils.MediaUtils.rolloutPhotoFromCamera;
 
 public class ImagePickerModule extends ReactContextBaseJavaModule
         implements ActivityEventListener {
+
+    private static final String TAG = "ImagePickerModule";
+
     public static final int REQUEST_LAUNCH_IMAGE_CAPTURE = 13001;
     public static final int REQUEST_LAUNCH_IMAGE_LIBRARY = 13002;
     public static final int REQUEST_LAUNCH_VIDEO_LIBRARY = 13003;
@@ -351,58 +362,15 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
                 callback = null;
                 return;
         }
-        final ReadExifResult result = readExifInterface(responseHelper, imageConfig);
-        if (result.error != null) {
-            removeUselessFiles(requestCode, imageConfig);
-            responseHelper.invokeError(callback, result.error.getMessage());
-            callback = null;
-            return;
-        }
-        BitmapFactory.Options options = new BitmapFactory.Options();
-        options.inJustDecodeBounds = true;
-        BitmapFactory.decodeFile(imageConfig.original.getAbsolutePath(), options);
-        int initialWidth = options.outWidth;
-        int initialHeight = options.outHeight;
-        updatedResultResponse(uri, imageConfig.original.getAbsolutePath());
-        // don't create a new file if contraint are respected
-        if (imageConfig.useOriginal(initialWidth, initialHeight, result.currentRotation)) {
-            responseHelper.putInt("width", initialWidth);
-            responseHelper.putInt("height", initialHeight);
-            fileScan(reactContext, imageConfig.original.getAbsolutePath());
-        } else {
-            imageConfig = getResizedImage(reactContext, this.options, imageConfig, initialWidth, initialHeight, requestCode);
-            if (imageConfig.resized == null) {
-                removeUselessFiles(requestCode, imageConfig);
-                responseHelper.putString("error", "Can't resize the image");
-            } else {
-                uri = Uri.fromFile(imageConfig.resized);
-                BitmapFactory.decodeFile(imageConfig.resized.getAbsolutePath(), options);
-                responseHelper.putInt("width", options.outWidth);
-                responseHelper.putInt("height", options.outHeight);
-                updatedResultResponse(uri, imageConfig.resized.getAbsolutePath());
-                fileScan(reactContext, imageConfig.resized.getAbsolutePath());
-            }
-        }
-        if (imageConfig.saveToCameraRoll && requestCode == REQUEST_LAUNCH_IMAGE_CAPTURE) {
-            final RolloutPhotoResult rolloutResult = rolloutPhotoFromCamera(imageConfig);
-            if (rolloutResult.error == null) {
-                imageConfig = rolloutResult.imageConfig;
-                uri = Uri.fromFile(imageConfig.getActualFile());
-                updatedResultResponse(uri, imageConfig.getActualFile().getAbsolutePath());
-            } else {
-                removeUselessFiles(requestCode, imageConfig);
-                final String errorMessage = new StringBuilder("Error moving image to camera roll: ")
-                        .append(rolloutResult.error.getMessage()).toString();
-                responseHelper.putString("error", errorMessage);
-                return;
-            }
-        }
+
         //add 20170831
         if (REQUEST_LAUNCH_IMAGE_CAPTURE == requestCode || REQUEST_LAUNCH_IMAGE_LIBRARY == requestCode) {
-          File file = new File(responseHelper.getResponse().getString("path"));
-           cropPicture(activity, RealPathUtil.compatUriFromFile(reactContext, file));
+            cropPicture(activity, uri);
             return;
         }
+
+        updatedResultResponse(uri, imageConfig.original.getAbsolutePath());
+
         //end 20170831
         responseHelper.invokeResponse(callback);
         callback = null;
@@ -446,7 +414,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
         responseHelper.putString("uri", uri.toString());
         responseHelper.putString("path", path);
         if (!noData) {
-            responseHelper.putString("data", getBase64StringFromFile(path));
+            responseHelper.putString("data", getBase64StringFromFile(uri));
         }
         putExtraFileInfo(path, responseHelper);
     }
@@ -534,10 +502,10 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
         return file;
     }
 
-    private String getBase64StringFromFile(String absoluteFilePath) {
+    private String getBase64StringFromFile(Uri uri) {
         InputStream inputStream = null;
         try {
-            inputStream = new FileInputStream(new File(absoluteFilePath));
+            inputStream = reactContext.getContentResolver().openInputStream(uri);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
@@ -575,6 +543,10 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
 
 
     private void parseOptions(final ReadableMap options) {
+        if (options == null) {
+            Log.e(TAG, "options is null");
+            return;
+        }
         noData = false;
         if (options.hasKey("noData")) {
             noData = options.getBoolean("noData");
@@ -599,12 +571,26 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
 
     private void cropPicture(Activity activity, Uri uri) {
         //解决当路径包含中文时，解析出错
-        File path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
-        cropPictureURI = Uri.fromFile(new File(path, "temp.jpg"));
+        String name = createImageName();
+        File cropPhotoDir = new File(activity.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "VesyncApp");
+        // Create the storage directory if it does not exist
+        if (!cropPhotoDir.exists() && !cropPhotoDir.mkdirs()) {
+            Log.d(TAG, "failed to create directory");
+        }
+        File cropPhoto = new File(cropPhotoDir, name);
+        cropPictureURI = Uri.fromFile(cropPhoto);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            cropPhoto = uriToFileApiQ(activity, uri, name);
+            cropPictureURI = FileProvider.getUriForFile(activity,
+                    activity.getPackageName() + ".fileprovider", cropPhoto);
+        }
         cropPicturePath = cropPictureURI.toString().replace("file://", "");
-
         Intent intent = new Intent("com.android.camera.action.CROP");
-        intent.setDataAndType(uri, "image/*");
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            intent.setDataAndType(cropPictureURI, "image/*");
+        } else {
+            intent.setDataAndType(uri, "image/*");
+        }
         intent.putExtra("crop", "true");
         intent.putExtra("aspectX", 1);
         intent.putExtra("aspectY", 1);
@@ -618,6 +604,39 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
         intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION
                 | Intent.FLAG_GRANT_READ_URI_PERMISSION);
         activity.startActivityForResult(intent, PHOTO_REQUEST_CUT);
+    }
+
+    private String createImageName() {
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        return "Vesync_" + timeStamp + ".jpg";
+    }
+
+    @TargetApi(Build.VERSION_CODES.Q)
+    public File uriToFileApiQ(Context context, Uri uri, String fileName) {
+        File file = null;
+        if(uri == null) {
+            return file;
+        }
+        //android10以上转换
+        if (uri.getScheme().equals(ContentResolver.SCHEME_FILE)) {
+            file = new File(uri.getPath());
+        } else if (uri.getScheme().equals(ContentResolver.SCHEME_CONTENT)) {
+            //把文件复制到沙盒目录
+            ContentResolver contentResolver = context.getContentResolver();
+            try {
+                InputStream is = contentResolver.openInputStream(uri);
+                File cropPhotoDir = new File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "VesyncApp");
+                File cache = new File(cropPhotoDir, fileName);
+                FileOutputStream fos = new FileOutputStream(cache);
+                FileUtils.copy(is, fos);
+                file = cache;
+                fos.close();
+                is.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return file;
     }
 
     private void showDialogIos(String msg) {
